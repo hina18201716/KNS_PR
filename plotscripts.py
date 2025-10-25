@@ -103,12 +103,19 @@ def average_snapshots_to_h5(path, start_ind, end_ind, nzero=False):
             f.create_dataset(key, data=summed[key])
             
             
-def getimagedata(img_path, ind, stokes_ind=0): 
+def getimagedata(img_path, ind, stokes_ind=0, resize=True): 
     
     data_id = rapplot.read_data_id(img_path, ind)
     min, max, image = rapplot.read_data(img_path, ind, data_id)
-    image_array = image2d(image, stokes_ind, data_id)
-    return data_id, min, max, image_array
+    if resize: 
+        image = image2d(image, stokes_ind, data_id)
+        
+    if isinstance(image, h5py.File):
+        print("file converted")
+        keys = list(image.keys())
+        image = image[keys[stokes_ind]][()] 
+    
+    return data_id, min, max, image
             
 def subtract(pathA, pathB, start_ind=100, end_ind=500, ave=True): 
     '''Average snapshots and subtract to get high order photon rings. 
@@ -153,16 +160,16 @@ def subtract(pathA, pathB, start_ind=100, end_ind=500, ave=True):
         sub_file[key] = img_A[key][:].astype(np.float64) - img_B[key][:].astype(np.float64)
     
     n = start_ind+1
-#    create a new hdf5 file for averaged data 
+#    create a new hdf5 file 
     output_file = pathA+'/img_data_%d.h5'%n
     if os.path.exists(output_file):
-        os.remove(output_file)  # Overwrite if already exists
+        os.remove(output_file) 
 
     with h5py.File(output_file, 'w') as f:
         for key in sub_file:
             f.create_dataset(key, data=sub_file[key])
             
-# read in asnd return 
+# read in and return 
     data_id_A  = rapplot.read_data_id(pathA, n)
     min_A, max_A,  sub = rapplot.read_data(pathA, n, data_id_A)    
         
@@ -185,9 +192,6 @@ def image2d(image, stokes_ind, data_id):
     width = n_blocks_side * pixels
     height = (n_box // n_blocks_side) * pixels
     
-#     print(f"n_box={n_box}, pixels_per_block_side={pixels}")
-#     print(f"n_blocks_side={n_blocks_side}, width={width}, height={height}")
-    
     image_array = np.zeros((height, width), dtype=float)
 
     for i in range(n_box):
@@ -208,7 +212,21 @@ def loadfigure(image_array, min, max, fig, ax, halfrange=20, mas=1, label="Stoke
     '''
     extent = [-halfrange * mas, halfrange * mas, -halfrange * mas, halfrange * mas]
     figure = ax.imshow((image_array/np.max(image_array))**0.5, vmin=0.0, vmax=1.0, cmap=cmap, origin='lower', extent=extent)
-    # figure = ax.imshow(image_array, norm=LogNorm(vmin=1e15, vmax=1e18), cmap=cmap, origin='lower', extent=extent)
-    
-    # fig.colorbar(figure, label=label, ax=ax)
+  
     return figure 
+
+
+def writehdf5(img_path, img_new, img_temeplate, snap):  
+    newfile = {key: np.zeros_like(img_template[key][:], dtype=np.float64) for key in img_template.keys()}
+    for key in newfile:
+        newfile[key[0]] = img_new.astype(np.float64) 
+    
+#    create a new hdf5 file for averaged data 
+    output_file = img_path+f'/img_data_10{snap}.h5'
+    if os.path.exists(output_file):
+        os.remove(output_file)  # Overwrite if already exists
+
+    with h5py.File(output_file, 'w') as f:
+        for key in sub_file:
+            f.create_dataset(key, data=sub_file[key])
+    return output_file
