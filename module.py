@@ -36,7 +36,6 @@ mas = (rg/d)* rapplot.MAS_IN_DEG
 
 Tunit =rg/rapplot.SPEED_OF_LIGHT
 
-print(mas)
 halfrange=20 #in rg
 # ====================================================
 
@@ -92,9 +91,9 @@ def plot_va(mov, ax, n):
     phi = RegularGridInterpolator((t, v, u[::-1]), np.angle(vis[..., ::-1]))
 
     bmin = 6e9
-    bmax = 40e10
+    bmax = 20e10
     uvd = np.linspace(0, bmax, 1000)
-
+    
     i = 0
     phi_angle = np.pi * i / 180
     u = uvd * np.cos(phi_angle)
