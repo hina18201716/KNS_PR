@@ -16,24 +16,10 @@ import rapplot
 from rapplot import read_data_id, read_data, plot_data_stokes
 
 
-#Computing relevant constants
-M=5e6 * rapplot.MSUN
-d=8 * rapplot.KPC
-
-rg = (rapplot.G*M/rapplot.SPEED_OF_LIGHT**2.)
-
-mas = (rg/d)* rapplot.MAS_IN_DEG
-
-Tunit =rg/rapplot.SPEED_OF_LIGHT
-
-halfrange=20 #in rg
-
 def read_avedata_id(folder,ind):
     file_name = folder+'/aveimg_%d.h5'%ind
-#     print("Reading keys from: ", file_name)
     images = h5py.File(file_name,'r')
     keys = [key for key in images.keys()]
-#     print(keys)
     images.close()
     return keys
 

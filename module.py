@@ -58,7 +58,7 @@ def import_ab(a, i, cond):
 
 
 
-def plotregion(imgs, ax):
+def plotregion(imgs, ax, halfrange=20, mas=1):
  
     intensity = np.sum(imgs, axis=0)
     dominant_index = np.argmax(imgs, axis=0)
@@ -67,19 +67,21 @@ def plotregion(imgs, ax):
     cmap = plt.get_cmap('tab10')
     colors = [cmap(9)] + [cmap(i) for i in range(3)] 
     color_map = np.array(colors)
+    extent = [-halfrange* mas,halfrange* mas, -halfrange* mas, halfrange* mas ]
     
-    extent = [-halfrange * mas, halfrange * mas, -halfrange * mas, halfrange * mas]
     display_index = dominant_index + 1
     ax.imshow(display_index, origin='lower', cmap=plt.matplotlib.colors.ListedColormap(color_map),
               extent=extent)
 
     labels = ['Background', 'n0', 'n1', 'n2']
     handles = [mpatches.Patch(color=color_map[i], label=labels[i]) for i in range(4)]
-
+        
     return handles
 
 
-def plot_va(mov, ax, n): 
+norm = 1
+def plot_va(mov, ax, n, i): 
+    global norm
     vis = mk.mockserve(mov, N=6000)
 
     U, V = vis.uvd
@@ -93,8 +95,7 @@ def plot_va(mov, ax, n):
     bmin = 6e9
     bmax = 20e10
     uvd = np.linspace(0, bmax, 1000)
-    
-    i = 0
+
     phi_angle = np.pi * i / 180
     u = uvd * np.cos(phi_angle)
     v = uvd * np.sin(phi_angle)
@@ -107,8 +108,11 @@ def plot_va(mov, ax, n):
     s[mask] = amp(p)
     s[~mask] = amp(m)
 
+    if n==100:
+        norm = np.max(s)
+        
     uvd_G = uvd / 1e9
-    s_Jy = s * 1e-23
+    s_Jy = s / norm
 
     if n == 100:
         line, = ax.semilogy(uvd_G, s_Jy, '-', linewidth=0.5, label='Total')
