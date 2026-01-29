@@ -1,0 +1,6 @@
+[submodule "RAPTOR"]
+	path = RAPTOR
+	url = https://github.com/hina18201716/RAPTOR
+[submodule "2017EHT"]
+	path = 2017
+	url = https://github.com/eventhorizontelescope/2017_sgra_paper5 
