@@ -20,42 +20,9 @@ from common import io_raptor as io
 from common import dalt
 from common import viz
 
-import plotscripts
-from plotscripts import subtract, image2d, loadfigure, getimagedata
-
-import rapplot
-
-
-#Computing relevant constants
-M=5e6 * rapplot.MSUN
-d=8.127 * rapplot.KPC
-
-rg = (rapplot.G*M/rapplot.SPEED_OF_LIGHT**2.)
-
-mas = (rg/d)* rapplot.MAS_IN_DEG
-
-Tunit =rg/rapplot.SPEED_OF_LIGHT
-
+mas = 1
 halfrange=20 #in rg
 # ====================================================
-
-def import_ab(a, i, cond):
-    file = f'output/shadow_a{a:.2f}_i{i:g}.h5' # change this to your local folder
-    with h5py.File(file) as h:
-      alpha = h['a'][:]
-      beta = h['b'][:]
-
-    if cond:
-      index_apos = np.where(alpha > 0)[0]
-      aright = index_apos[beta[index_apos].argmin()]
-
-      for bb in np.linspace(-10e-3, 10e-3, 10):
-        alpha = np.append(alpha, alpha[aright])
-        beta = np.append(beta, bb)
-
-    return (alpha, beta)
-# ====================================================
-
 
 
 def plotregion(imgs, ax, halfrange=20, mas=1):

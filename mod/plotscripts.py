@@ -12,9 +12,36 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 import matplotlib.image as mpimg
 import h5py
-import rapplot
-from rapplot import read_data_id, read_data, plot_data_stokes
 
+
+def read_data_id(folder,ind):
+    file_name = folder+'/img_data_%d.h5'%ind
+    print("Reading keys from: ", file_name)
+    images = h5py.File(file_name,'r')
+    keys = [key for key in images.keys()]
+    print(keys)
+    images.close()
+    return keys
+
+def read_data(folder,ind,data_id):
+
+    file_name = folder+'/img_data_%d.h5'%ind
+
+    print("Reading in: ", file_name)
+
+    images = h5py.File(file_name,'r')
+    print(images.keys())
+    min = [-100.,-100.,-100.,-100.]
+    max = [100.,100.,100,100.]
+    print(len(data_id))
+    for j in range(0,len(data_id)-4):
+        for i in range(0,len(images[data_id[j]])):
+            current=np.max(images[data_id[j]][i])
+            max[j]=np.maximum(max[j],np.max(images[data_id[j]][i]))
+            min[j]=np.minimum(min[j],np.min(images[data_id[j]][i]))
+
+
+    return min,max,images
 
 def read_avedata_id(folder,ind):
     file_name = folder+'/aveimg_%d.h5'%ind
@@ -63,7 +90,7 @@ def average_snapshots_to_h5(path, start_ind, end_ind, nzero=False):
     
  # Get initial structure 
     data_id = read_data_id(folder, start_ind)
-    minval, maxval, images = rapplot.read_data(folder, start_ind, data_id)
+    minval, maxval, images = read_data(folder, start_ind, data_id)
     
 # Create a float64 dictionary to hold the sum
     summed = {key: np.zeros_like(images[key][:], dtype=np.float64) for key in images.keys()}
@@ -71,7 +98,7 @@ def average_snapshots_to_h5(path, start_ind, end_ind, nzero=False):
     for ind in range(start_ind, end_ind + 1):
        
         data_id = read_data_id(folder, ind)
-        _, _, images = rapplot.read_data(folder, ind, data_id)
+        _, _, images = read_data(folder, ind, data_id)
 
         for key in summed:
             summed[key] += images[key][:].astype(np.float64)
@@ -91,8 +118,8 @@ def average_snapshots_to_h5(path, start_ind, end_ind, nzero=False):
             
 def getimagedata(img_path, ind, stokes_ind=0, resize=True): 
     
-    data_id = rapplot.read_data_id(img_path, ind)
-    min, max, image = rapplot.read_data(img_path, ind, data_id)
+    data_id = read_data_id(img_path, ind)
+    min, max, image = read_data(img_path, ind, data_id)
     if resize: 
         image = image2d(image, stokes_ind, data_id)
         
@@ -134,11 +161,11 @@ def subtract(pathA, pathB, start_ind=100, end_ind=500, ave=True):
 
     else: 
         # Get initial structure 
-        data_id_A  = rapplot.read_data_id(pathA, start_ind)
-        data_id_B  = rapplot.read_data_id(pathB, start_ind)
+        data_id_A  = read_data_id(pathA, start_ind)
+        data_id_B  = read_data_id(pathB, start_ind)
 
-        min_A, max_A,  img_A = rapplot.read_data(pathA, start_ind, data_id_A)    
-        min_B, max_B,  img_B = rapplot.read_data(pathB, start_ind, data_id_B)
+        min_A, max_A,  img_A = read_data(pathA, start_ind, data_id_A)    
+        min_B, max_B,  img_B = read_data(pathB, start_ind, data_id_B)
      
     # Create a float64 dictionary to hold the sum
     sub_file = {key: np.zeros_like(img_A[key][:], dtype=np.float64) for key in img_A.keys()}
@@ -156,8 +183,8 @@ def subtract(pathA, pathB, start_ind=100, end_ind=500, ave=True):
             f.create_dataset(key, data=sub_file[key])
             
 # read in and return 
-    data_id_A  = rapplot.read_data_id(pathA, n)
-    min_A, max_A,  sub = rapplot.read_data(pathA, n, data_id_A)    
+    data_id_A  = read_data_id(pathA, n)
+    min_A, max_A,  sub = read_data(pathA, n, data_id_A)    
         
     sub_array = image2d(sub, 0, data_id_A)
     sub_array[sub_array<0] = 0
